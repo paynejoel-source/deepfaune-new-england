@@ -186,6 +186,27 @@ class PipelineTests(unittest.TestCase):
                 models_dir / "dfne_weights_v1_0.pth",
             )
 
+    def test_run_preflight_check_returns_zero(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            mount_root = root / "clips"
+            detector_model_path = root / "models" / "detector.pt"
+            classifier_model_path = root / "models" / "classifier.pth"
+            detector_model_path.parent.mkdir(parents=True, exist_ok=True)
+            mount_root.mkdir(parents=True, exist_ok=True)
+            detector_model_path.write_text("detector", encoding="utf-8")
+            classifier_model_path.write_text("classifier", encoding="utf-8")
+
+            result = run_pipeline.run_preflight_check(
+                config_path=root / "config" / "pipeline_settings.yaml",
+                settings={"DEFAULT_CAMERA_NAME": "back_yard"},
+                mount_root=mount_root,
+                detector_model_path=detector_model_path,
+                classifier_model_path=classifier_model_path,
+            )
+
+            self.assertEqual(result, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

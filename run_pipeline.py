@@ -87,6 +87,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Show which clips would be processed and write hourly summaries without running inference.",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Validate config, model paths, mount path, and required system binaries without running inference.",
+    )
     return parser
 
 
@@ -179,6 +184,28 @@ def load_state(state_path: Path) -> dict[str, Any] | None:
     if not state_path.is_file():
         return None
     return read_json_report(state_path)
+
+
+def run_preflight_check(
+    config_path: Path,
+    settings: dict[str, Any],
+    mount_root: Path,
+    detector_model_path: Path,
+    classifier_model_path: Path,
+) -> int:
+    """Print a human-readable validation summary and exit without inference."""
+    print("DeepFaune New England preflight check")
+    print(f"Config: {config_path}")
+    print(f"Mount path: {mount_root}")
+    print(f"Detector model: {detector_model_path}")
+    print(f"Classifier model: {classifier_model_path}")
+    print(f"Mount exists: {mount_exists(mount_root)}")
+    print(f"Mount ready: {mount_is_ready(mount_root)}")
+    print(f"Detector model exists: {detector_model_path.is_file()}")
+    print(f"Classifier model exists: {classifier_model_path.is_file()}")
+    print(f"Default camera: {str(settings.get('DEFAULT_CAMERA_NAME', '')).strip() or '(unset)'}")
+    print("Preflight check passed.")
+    return 0
 
 
 def save_state(state_path: Path, payload: dict[str, Any]) -> Path:
@@ -744,7 +771,8 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
 
-    settings = load_pipeline_settings(args.config)
+    config_path = Path(args.config)
+    settings = load_pipeline_settings(config_path)
     mount_root = Path(settings["mount_root"])
     detector_model_path = Path(settings["detector_model_path"])
     detector_version = str(settings.get("DETECTOR_VERSION", "MDV6-yolov9-c"))
@@ -763,6 +791,15 @@ def main() -> int:
     positive_clips_dir_value = str(settings.get("POSITIVE_CLIPS_DIR", "")).strip()
     positive_clips_dir = Path(positive_clips_dir_value) if positive_clips_dir_value else None
     positive_clip_min_confidence = float(settings.get("POSITIVE_CLIP_MIN_CONFIDENCE", 0.0))
+
+    if args.check:
+        return run_preflight_check(
+            config_path=config_path,
+            settings=settings,
+            mount_root=mount_root,
+            detector_model_path=detector_model_path,
+            classifier_model_path=classifier_model_path,
+        )
 
     with file_lock(lock_file):
         retention_result = run_retention(

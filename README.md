@@ -67,6 +67,12 @@ cp config/pipeline_settings.example.yaml config/pipeline_settings.yaml
 
 Add the required model files under `models/` as described in [docs/MODELS.md](/home/joel/deepfaune_new_england/docs/MODELS.md).
 
+Run a preflight validation check:
+
+```bash
+python run_pipeline.py --check
+```
+
 Validate the pipeline on a local clip:
 
 ```bash
