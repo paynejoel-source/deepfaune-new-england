@@ -322,9 +322,41 @@ class PipelineTests(unittest.TestCase):
             self.assertTrue((export_dir / "deployments.csv").is_file())
             self.assertTrue((export_dir / "media.csv").is_file())
             self.assertTrue((export_dir / "observations.csv").is_file())
+            self.assertTrue((export_dir / "export_info.json").is_file())
             datapackage = read_json_report(export_dir / "datapackage.json")
             self.assertEqual(datapackage["project"]["title"], "DeepFaune Export")
             self.assertEqual(datapackage["taxonomic"], [{"scientificName": "Odocoileus virginianus"}])
+            export_info = read_json_report(export_dir / "export_info.json")
+            self.assertEqual(export_info["observation_mode"], "detection")
+            self.assertEqual(export_info["unresolved_species_labels"], [])
+
+    def test_camtrap_export_species_summary_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            config_path = root / "config.yaml"
+            reports_dir = root / "reports"
+            export_dir = root / "camtrap_dp"
+            reports_dir.mkdir(parents=True, exist_ok=True)
+            config_path.write_text(
+                "\n".join(
+                    [
+                        'OUTPUT_DIR: "output"',
+                        "CAMTRAP_LATITUDE: 34.1",
+                        "CAMTRAP_LONGITUDE: -84.1",
+                        'CAMTRAP_LOCATION_NAME: "Ball Ground"',
+                        'CAMTRAP_OBSERVATION_MODE: "species_summary"',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            report = run_pipeline.build_demo_clip_report()
+            (reports_dir / "demo_clip.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+            run_pipeline.run_camtrap_dp_export(config_path, reports_dir, export_dir)
+
+            observations_csv = (export_dir / "observations.csv").read_text(encoding="utf-8")
+            self.assertIn("Odocoileus virginianus", observations_csv)
+            self.assertIn("species_summary", observations_csv)
 
 
 if __name__ == "__main__":

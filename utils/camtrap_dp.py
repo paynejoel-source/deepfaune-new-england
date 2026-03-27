@@ -65,6 +65,34 @@ OBSERVATION_FIELDS = [
     "observationTags",
 ]
 
+DEFAULT_DFNE_TAXON_MAP = {
+    "american_marten": "Martes americana",
+    "bird_sp.": "Aves",
+    "black_bear": "Ursus americanus",
+    "bobcat": "Lynx rufus",
+    "coyote": "Canis latrans",
+    "domestic_cat": "Felis catus",
+    "domestic_cow": "Bos taurus",
+    "domestic_dog": "Canis lupus familiaris",
+    "fisher": "Pekania pennanti",
+    "gray_fox": "Urocyon cinereoargenteus",
+    "gray_squirrel": "Sciurus carolinensis",
+    "human": "Homo sapiens",
+    "moose": "Alces alces",
+    "mouse_sp.": "Rodentia",
+    "opossum": "Didelphis virginiana",
+    "raccoon": "Procyon lotor",
+    "red_fox": "Vulpes vulpes",
+    "red_squirrel": "Tamiasciurus hudsonicus",
+    "skunk": "Mephitidae",
+    "snowshoe_hare": "Lepus americanus",
+    "white_tailed_deer": "Odocoileus virginianus",
+    "wild_boar": "Sus scrofa",
+    "wild_turkey": "Meleagris gallopavo",
+    "no-species": "",
+    "no_species": "",
+}
+
 
 def slugify(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]+", "-", value.strip()).strip("-").lower() or "unknown"
@@ -106,6 +134,10 @@ def build_media_id(relative_clip_path: str) -> str:
     return slugify(relative_clip_path.replace("/", "-").replace(".mp4", ""))
 
 
+def normalize_prediction_label(value: str) -> str:
+    return slugify(value).replace("-", "_")
+
+
 def get_camera_metadata(settings: dict[str, Any], camera_name: str) -> dict[str, Any]:
     per_camera = settings.get("CAMTRAP_CAMERA_LOCATIONS", {}) or {}
     if camera_name in per_camera:
@@ -136,8 +168,27 @@ def get_camera_metadata(settings: dict[str, Any], camera_name: str) -> dict[str,
 
 
 def map_prediction_to_scientific_name(prediction: str, settings: dict[str, Any]) -> str:
-    taxon_map = settings.get("CAMTRAP_TAXON_MAP", {}) or {}
-    return str(taxon_map.get(prediction, prediction.replace("_", " ")))
+    normalized_prediction = normalize_prediction_label(prediction)
+    taxon_map = {
+        normalize_prediction_label(str(key)): str(value)
+        for key, value in (settings.get("CAMTRAP_TAXON_MAP", {}) or {}).items()
+    }
+    if normalized_prediction in taxon_map:
+        return taxon_map[normalized_prediction]
+    if normalized_prediction in DEFAULT_DFNE_TAXON_MAP:
+        return DEFAULT_DFNE_TAXON_MAP[normalized_prediction]
+    return prediction.replace("_", " ")
+
+
+def get_observation_mode(settings: dict[str, Any]) -> str:
+    mode = str(settings.get("CAMTRAP_OBSERVATION_MODE", "detection")).strip().lower() or "detection"
+    valid_modes = {"detection", "clip_top", "species_summary"}
+    if mode not in valid_modes:
+        raise ValueError(
+            f"Unsupported CAMTRAP_OBSERVATION_MODE '{mode}'. "
+            f"Expected one of: {', '.join(sorted(valid_modes))}."
+        )
+    return mode
 
 
 def build_deployment_rows(
@@ -225,6 +276,7 @@ def build_observation_rows(
     classified_by = str(
         settings.get("CAMTRAP_CLASSIFIED_BY", "MegaDetector + DeepFaune New England pipeline")
     )
+    observation_mode = get_observation_mode(settings)
 
     for report in clip_reports:
         camera_name = str(report["camera_name"])
@@ -259,6 +311,65 @@ def build_observation_rows(
                     "observationTags": f"camera:{camera_name}|report_status:{report.get('status', 'unknown')}",
                 }
             )
+            continue
+
+        if observation_mode == "clip_top":
+            top_prediction = str(report.get("top_prediction") or "")
+            rows.append(
+                {
+                    "observationID": f"{media_id}-top",
+                    "deploymentID": deployment_ids[camera_name],
+                    "mediaID": media_id,
+                    "eventID": event_id,
+                    "eventStart": event_start,
+                    "eventEnd": event_end,
+                    "observationLevel": "media",
+                    "observationType": "animal" if top_prediction else "unknown",
+                    "scientificName": map_prediction_to_scientific_name(top_prediction, settings) if top_prediction else "",
+                    "count": int(report.get("animal_detection_count", 0)) or "",
+                    "bboxX": "",
+                    "bboxY": "",
+                    "bboxWidth": "",
+                    "bboxHeight": "",
+                    "classificationMethod": "machine",
+                    "classifiedBy": classified_by,
+                    "classificationTimestamp": str(report.get("generated_at")),
+                    "classificationProbability": report.get("top_prediction_confidence", ""),
+                    "observationTags": f"camera:{camera_name}|mode:clip_top|predicted_label:{top_prediction or 'unknown'}",
+                }
+            )
+            continue
+
+        if observation_mode == "species_summary":
+            species_counts = report.get("species_counts", {}) or {}
+            species_confidence_summary = report.get("species_confidence_summary", {}) or {}
+            for species_label, count in sorted(species_counts.items()):
+                observation_index += 1
+                rows.append(
+                    {
+                        "observationID": f"{media_id}-species-{observation_index}",
+                        "deploymentID": deployment_ids[camera_name],
+                        "mediaID": media_id,
+                        "eventID": event_id,
+                        "eventStart": event_start,
+                        "eventEnd": event_end,
+                        "observationLevel": "media",
+                        "observationType": "animal",
+                        "scientificName": map_prediction_to_scientific_name(str(species_label), settings),
+                        "count": int(count),
+                        "bboxX": "",
+                        "bboxY": "",
+                        "bboxWidth": "",
+                        "bboxHeight": "",
+                        "classificationMethod": "machine",
+                        "classifiedBy": classified_by,
+                        "classificationTimestamp": str(report.get("generated_at")),
+                        "classificationProbability": species_confidence_summary.get(species_label, ""),
+                        "observationTags": (
+                            f"camera:{camera_name}|mode:species_summary|predicted_label:{species_label}"
+                        ),
+                    }
+                )
             continue
 
         for frame in report.get("frames", []):
@@ -404,6 +515,48 @@ def build_datapackage(
     }
 
 
+def build_export_metadata(
+    clip_reports: list[dict[str, Any]],
+    settings: dict[str, Any],
+    destination_dir: Path,
+) -> dict[str, Any]:
+    species_labels = sorted(
+        {
+            str(label)
+            for report in clip_reports
+            for label in (report.get("species_counts", {}) or {}).keys()
+            if str(label)
+        }
+    )
+    normalized_custom_taxa = {
+        normalize_prediction_label(str(key)): str(value)
+        for key, value in (settings.get("CAMTRAP_TAXON_MAP", {}) or {}).items()
+    }
+    unresolved_labels = [
+        label
+        for label in species_labels
+        if normalize_prediction_label(label) not in normalized_custom_taxa
+        and normalize_prediction_label(label) not in DEFAULT_DFNE_TAXON_MAP
+    ]
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "camtrap_dp_version": CAMTRAP_DP_VERSION,
+        "observation_mode": get_observation_mode(settings),
+        "source_report_count": len(clip_reports),
+        "camera_names": sorted({str(report["camera_name"]) for report in clip_reports}),
+        "species_labels_detected": species_labels,
+        "unresolved_species_labels": unresolved_labels,
+        "output_files": [
+            "datapackage.json",
+            "deployments.csv",
+            "media.csv",
+            "observations.csv",
+            "export_info.json",
+        ],
+        "destination_dir": str(destination_dir),
+    }
+
+
 def export_camtrap_dp_package(
     reports_dir: Path,
     destination_dir: Path,
@@ -418,10 +571,12 @@ def export_camtrap_dp_package(
     media_rows = build_media_rows(clip_reports, deployment_ids, settings)
     observation_rows = build_observation_rows(clip_reports, deployment_ids, settings)
     datapackage = build_datapackage(deployment_rows, observation_rows, settings)
+    export_metadata = build_export_metadata(clip_reports, settings, destination_dir)
 
     destination_dir.mkdir(parents=True, exist_ok=True)
     serialize_csv_rows(deployment_rows, DEPLOYMENTS_FIELDS, destination_dir / "deployments.csv")
     serialize_csv_rows(media_rows, MEDIA_FIELDS, destination_dir / "media.csv")
     serialize_csv_rows(observation_rows, OBSERVATION_FIELDS, destination_dir / "observations.csv")
     write_json_report(datapackage, destination_dir / "datapackage.json")
+    write_json_report(export_metadata, destination_dir / "export_info.json")
     return destination_dir

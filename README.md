@@ -83,6 +83,12 @@ Export existing clip reports to a Camtrap DP package:
 python run_pipeline.py --export-camtrap-dp
 ```
 
+Optional export tuning in the config:
+
+- `CAMTRAP_OBSERVATION_MODE: "detection"` for one row per detected object
+- `CAMTRAP_OBSERVATION_MODE: "clip_top"` for one row per clip using the top prediction
+- `CAMTRAP_OBSERVATION_MODE: "species_summary"` for one row per species summary in each clip
+
 Write demo reports without models or a mounted clip tree:
 
 ```bash
@@ -137,6 +143,7 @@ Review publish-safe example outputs:
 - The tracked config file is the example config, not a live machine config.
 - Generated output, model weights, virtual environments, and local caches are intentionally excluded from version control.
 - Camtrap DP export is additive. It generates `deployments.csv`, `media.csv`, `observations.csv`, and `datapackage.json` from existing clip reports without changing the native JSON format.
+- The export also writes `export_info.json` so the package records how it was generated and whether any species labels were left unresolved.
 
 ## Disclaimer and Credits
 
