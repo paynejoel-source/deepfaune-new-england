@@ -143,12 +143,16 @@ Review publish-safe example outputs:
 
 - [docs/examples/clip_report_example.json](/home/joel/deepfaune_new_england/docs/examples/clip_report_example.json)
 - [docs/examples/hourly_summary_example.json](/home/joel/deepfaune_new_england/docs/examples/hourly_summary_example.json)
+- [docs/examples/validation_single_dog_case.csv](/home/joel/deepfaune_new_england/docs/examples/validation_single_dog_case.csv)
+- [docs/examples/validation_single_dog_report.json](/home/joel/deepfaune_new_england/docs/examples/validation_single_dog_report.json)
 
 Hourly runs also write a lightweight review bundle under `output/review/...` with:
 
 - `review_summary.json`
 - `review_summary.html`
 - `output/validation/validation_report.json` for labeled validation runs
+
+The single-dog validation example is intentionally narrow. It demonstrates the validation workflow on one real local clip and should not be interpreted as a meaningful estimate of field performance. In particular, Frigate clip capture can miss animal events, so the current example artifacts do not represent full detection opportunity or recall.
 
 ## Notes
 

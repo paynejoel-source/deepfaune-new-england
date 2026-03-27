@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-03-27T21:50:28.768841+00:00",
+  "reports_dir": "output/excerpts",
+  "validation_source": "validation_single_dog_case.csv",
+  "total_cases": 1,
+  "counts": {
+    "match": 1
+  },
+  "match_rate": 1.0,
+  "results": [
+    {
+      "relative_clip_path": "1774554137.0-1774554147.016992.mp4",
+      "expected_label": "Domestic Dog",
+      "predicted_label": "Domestic Dog",
+      "top_prediction_confidence": 0.9946834444999695,
+      "status": "match"
+    }
+  ]
+}
