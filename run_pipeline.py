@@ -745,10 +745,10 @@ def main() -> int:
     args = parser.parse_args()
 
     settings = load_pipeline_settings(args.config)
-    mount_root = Path(settings["BEAST_MOUNT_PATH"])
-    detector_model_path = Path(settings["DETECTOR_MODEL_PATH"])
+    mount_root = Path(settings["mount_root"])
+    detector_model_path = Path(settings["detector_model_path"])
     detector_version = str(settings.get("DETECTOR_VERSION", "MDV6-yolov9-c"))
-    classifier_model_path = Path(settings["CLASSIFIER_MODEL_PATH"])
+    classifier_model_path = Path(settings["classifier_model_path"])
     confidence_threshold = float(settings["CONFIDENCE_THRESHOLD"])
     frame_sample_seconds = float(settings.get("FRAME_SAMPLE_SECONDS", 1.0))
     if args.frame_sample_seconds is not None:

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
 import run_pipeline
+from utils.config import load_pipeline_settings
 from utils.locking import file_lock
 
 
@@ -124,6 +126,65 @@ class PipelineTests(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     with file_lock(lock_path):
                         pass
+
+    def test_load_pipeline_settings_reports_missing_models(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            config_dir = root / "config"
+            config_dir.mkdir(parents=True, exist_ok=True)
+            mount_root = root / "clips"
+            mount_root.mkdir(parents=True, exist_ok=True)
+            config_path = config_dir / "pipeline_settings.yaml"
+            config_path.write_text(
+                "\n".join(
+                    [
+                        f'BEAST_MOUNT_PATH: "{mount_root}"',
+                        'DETECTOR_MODEL_PATH: "models/MDV6-yolov9-c.pt"',
+                        'CLASSIFIER_MODEL_PATH: "models/dfne_weights_v1_0.pth"',
+                        "CONFIDENCE_THRESHOLD: 0.5",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValueError) as context:
+                load_pipeline_settings(config_path)
+
+            self.assertIn("Detector model not found", str(context.exception))
+            self.assertIn("Classifier model not found", str(context.exception))
+
+    def test_load_pipeline_settings_returns_resolved_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            config_dir = root / "config"
+            models_dir = root / "models"
+            mount_root = root / "clips"
+            config_dir.mkdir(parents=True, exist_ok=True)
+            models_dir.mkdir(parents=True, exist_ok=True)
+            mount_root.mkdir(parents=True, exist_ok=True)
+            (models_dir / "MDV6-yolov9-c.pt").write_text("detector", encoding="utf-8")
+            (models_dir / "dfne_weights_v1_0.pth").write_text("classifier", encoding="utf-8")
+            config_path = config_dir / "pipeline_settings.yaml"
+            config_path.write_text(
+                "\n".join(
+                    [
+                        f'BEAST_MOUNT_PATH: "{mount_root}"',
+                        'DETECTOR_MODEL_PATH: "models/MDV6-yolov9-c.pt"',
+                        'CLASSIFIER_MODEL_PATH: "models/dfne_weights_v1_0.pth"',
+                        "CONFIDENCE_THRESHOLD: 0.5",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            settings = load_pipeline_settings(config_path)
+
+            self.assertEqual(settings["mount_root"], mount_root)
+            self.assertEqual(settings["detector_model_path"], models_dir / "MDV6-yolov9-c.pt")
+            self.assertEqual(
+                settings["classifier_model_path"],
+                models_dir / "dfne_weights_v1_0.pth",
+            )
 
 
 if __name__ == "__main__":
