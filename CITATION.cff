@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite it using the metadata below."
+title: "DeepFaune New England"
+version: "v0.1.0"
+date-released: 2026-03-27
+type: software
+authors:
+  - family-names: Payne
+    given-names: Joel
+    email: payne.joel@gmail.com
+repository-code: "https://github.com/paynejoel-source/deepfaune-new-england"
+url: "https://github.com/paynejoel-source/deepfaune-new-england"
+license: MIT
+abstract: "Wildlife clip processing pipeline for Frigate-style MP4 video using MegaDetector and DeepFaune New England classification."
+keywords:
+  - wildlife monitoring
+  - camera traps
+  - MegaDetector
+  - DeepFaune
+  - Frigate
+  - video processing
+  - computer vision
