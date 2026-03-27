@@ -131,6 +131,19 @@ Review publish-safe example outputs:
 - The tracked config file is the example config, not a live machine config.
 - Generated output, model weights, virtual environments, and local caches are intentionally excluded from version control.
 
+## Disclaimer and Credits
+
+This repository is an independent workflow implementation built on top of the broader DeepFaune New England, MegaDetector, and PyTorch-Wildlife ecosystem. It is not the official upstream USGS or UVM DeepFaune New England repository or software release.
+
+The engineering in this repository focuses on operational use cases such as:
+
+- Frigate-style `.mp4` clip handling
+- hourly automation
+- structured JSON reporting
+- local preflight validation and workflow support
+
+Model weights, upstream model design, and the original DeepFaune New England scientific work belong to their respective upstream authors and organizations.
+
 Retention is controlled in [config/pipeline_settings.yaml](/home/joel/deepfaune_new_england/config/pipeline_settings.yaml) with:
 
 ```yaml
