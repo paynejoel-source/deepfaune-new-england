@@ -9,6 +9,8 @@ Wildlife clip processing pipeline for mounted Beast/Frigate `.mp4` clips using:
 - clip-level error isolation so hourly runs continue past bad files
 - automatic retention cleanup for generated outputs
 
+Created and maintained by Joel Payne.
+
 ## Overview
 
 Technical design notes are in [docs/BUILD_STATUS.md](/home/joel/deepfaune_new_england/docs/BUILD_STATUS.md).
