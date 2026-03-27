@@ -83,6 +83,12 @@ Export existing clip reports to a Camtrap DP package:
 python run_pipeline.py --export-camtrap-dp
 ```
 
+Validate existing clip reports against a labeled CSV or JSON file:
+
+```bash
+python run_pipeline.py --validate validation_cases.csv
+```
+
 Optional export tuning in the config:
 
 - `CAMTRAP_OBSERVATION_MODE: "detection"` for one row per detected object
@@ -142,6 +148,7 @@ Hourly runs also write a lightweight review bundle under `output/review/...` wit
 
 - `review_summary.json`
 - `review_summary.html`
+- `output/validation/validation_report.json` for labeled validation runs
 
 ## Notes
 

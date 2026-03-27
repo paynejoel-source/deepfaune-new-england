@@ -361,6 +361,38 @@ class PipelineTests(unittest.TestCase):
             self.assertIn("Odocoileus virginianus", observations_csv)
             self.assertIn("species_summary", observations_csv)
 
+    def test_run_validation_writes_report(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            config_path = root / "config.yaml"
+            reports_dir = root / "reports"
+            output_dir = root / "output"
+            validation_csv = root / "validation_cases.csv"
+            reports_dir.mkdir(parents=True, exist_ok=True)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            config_path.write_text('OUTPUT_DIR: "output"\n', encoding="utf-8")
+            report = run_pipeline.build_demo_clip_report()
+            (reports_dir / "demo_clip.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+            validation_csv.write_text(
+                "relative_clip_path,expected_label\n"
+                "previews/back_yard/1774554110.0-1774554130.0.mp4,white_tailed_deer\n"
+                "previews/back_yard/missing.mp4,bobcat\n",
+                encoding="utf-8",
+            )
+
+            current_dir = Path.cwd()
+            try:
+                os.chdir(root)
+                result = run_pipeline.run_validation(config_path, validation_csv, reports_dir)
+            finally:
+                os.chdir(current_dir)
+
+            self.assertEqual(result, 0)
+            validation_report = read_json_report(output_dir / "validation" / "validation_report.json")
+            self.assertEqual(validation_report["total_cases"], 2)
+            self.assertEqual(validation_report["counts"]["match"], 1)
+            self.assertEqual(validation_report["counts"]["missing_report"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

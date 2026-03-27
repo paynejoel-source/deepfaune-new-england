@@ -30,6 +30,7 @@ from utils.mount_checks import mount_exists, mount_is_ready
 from utils.retention import prune_old_files
 from utils.reporting import read_json_report, write_json_report
 from utils.review import write_review_bundle
+from utils.validation import validate_reports
 from utils.video import extract_frames, get_sampled_frame_timestamps, get_video_metadata
 
 LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo or ZoneInfo("UTC")
@@ -108,6 +109,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--export-dir",
         default=None,
         help="Optional destination directory for Camtrap DP export files.",
+    )
+    parser.add_argument(
+        "--validate",
+        default=None,
+        help="Path to a CSV or JSON file with validation cases (relative_clip_path, expected_label).",
     )
     return parser
 
@@ -361,6 +367,19 @@ def run_camtrap_dp_export(config_path: Path, reports_dir: Path | None, export_di
     destination_dir = export_dir or (output_dir / "camtrap_dp")
     export_camtrap_dp_package(source_dir, destination_dir, settings)
     print(f"Wrote Camtrap DP package: {destination_dir}")
+    return 0
+
+
+def run_validation(config_path: Path, validation_source: Path, reports_dir: Path | None) -> int:
+    """Validate clip reports against a labeled CSV/JSON file."""
+    from utils.config import read_settings_file
+
+    settings = read_settings_file(config_path)
+    output_dir = Path(str(settings.get("OUTPUT_DIR", "output")))
+    source_dir = reports_dir or (output_dir / "clips" if (output_dir / "clips").is_dir() else output_dir)
+    destination = output_dir / "validation" / "validation_report.json"
+    validate_reports(source_dir, validation_source, destination)
+    print(f"Wrote validation report: {destination}")
     return 0
 
 
@@ -944,6 +963,13 @@ def main() -> int:
             config_path=Path(args.config),
             reports_dir=Path(args.reports_dir) if args.reports_dir else None,
             export_dir=Path(args.export_dir) if args.export_dir else None,
+        )
+
+    if args.validate:
+        return run_validation(
+            config_path=Path(args.config),
+            validation_source=Path(args.validate),
+            reports_dir=Path(args.reports_dir) if args.reports_dir else None,
         )
 
     from utils.config import load_pipeline_settings
