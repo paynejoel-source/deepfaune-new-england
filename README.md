@@ -20,6 +20,7 @@ Technical design notes are in [docs/BUILD_STATUS.md](/home/joel/deepfaune_new_en
 - Runtime entrypoint: [run_pipeline.py](/home/joel/deepfaune_new_england/run_pipeline.py)
 - Example config: [config/pipeline_settings.example.yaml](/home/joel/deepfaune_new_england/config/pipeline_settings.example.yaml)
 - Environment bootstrap: [setup_env.sh](/home/joel/deepfaune_new_england/setup_env.sh)
+- Model setup: [docs/MODELS.md](/home/joel/deepfaune_new_england/docs/MODELS.md)
 
 ## Requirements
 
@@ -41,6 +42,42 @@ cp config/pipeline_settings.example.yaml config/pipeline_settings.yaml
 Then edit `config/pipeline_settings.yaml` for your local mount paths, output paths, and preferred defaults.
 
 The repository does not ship model weights. You will need to place the required detector and classifier weights into `models/` yourself.
+
+## Quickstart
+
+Install system prerequisites:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ffmpeg python3-venv
+```
+
+Bootstrap the Python environment:
+
+```bash
+./setup_env.sh
+source .venv/bin/activate
+```
+
+Create your local config:
+
+```bash
+cp config/pipeline_settings.example.yaml config/pipeline_settings.yaml
+```
+
+Add the required model files under `models/` as described in [docs/MODELS.md](/home/joel/deepfaune_new_england/docs/MODELS.md).
+
+Validate the pipeline on a local clip:
+
+```bash
+python run_pipeline.py --clip test_video/42.17.mp4
+```
+
+Run a dry-run hourly window:
+
+```bash
+python run_pipeline.py --hourly --camera back_yard --window-start 2026-03-21T16:00:00-04:00 --window-end 2026-03-21T17:00:00-04:00 --dry-run
+```
 
 ## Basic Usage
 
