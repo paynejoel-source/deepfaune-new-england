@@ -1,0 +1,37 @@
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Local virtual environment and caches
+.venv/
+.cache/
+
+# Project runtime output
+output/
+
+# Local logs and temp files
+*.log
+*.tmp
+*.temp
+
+# Model weights and downloaded assets
+models/*.pt
+models/*.pth
+models/*.ckpt
+models/*.bin
+
+# Local machine config
+config/pipeline_settings.yaml
+
+# Local media/test artifacts
+test_video/*.mp4
+test_video/*.mov
+test_video/*.avi
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

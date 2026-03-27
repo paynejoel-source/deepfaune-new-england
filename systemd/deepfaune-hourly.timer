@@ -1,0 +1,10 @@
+[Unit]
+Description=Run DeepFaune New England hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=deepfaune-hourly.service
+
+[Install]
+WantedBy=timers.target

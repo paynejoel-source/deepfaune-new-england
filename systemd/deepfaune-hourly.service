@@ -1,0 +1,12 @@
+[Unit]
+Description=DeepFaune New England hourly wildlife pipeline
+After=network-online.target remote-fs.target
+Wants=network-online.target remote-fs.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/joel/deepfaune_new_england
+ExecStart=/home/joel/deepfaune_new_england/.venv/bin/python /home/joel/deepfaune_new_england/run_pipeline.py --hourly
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+BEAST_MOUNT_PATH: "/mnt/beast_storage/nvr/frigate/clips"
+DETECTOR_MODEL_PATH: "models/MDV6-yolov9-c.pt"
+DETECTOR_VERSION: "MDV6-yolov9-c"
+CLASSIFIER_MODEL_PATH: "models/dfne_weights_v1_0.pth"
+CONFIDENCE_THRESHOLD: 0.5
+FRAME_SAMPLE_SECONDS: 1.0
+OUTPUT_DIR: "output/excerpts"
+STATE_DIR: "output/excerpts/state"
+LOCK_FILE: "output/excerpts/state/pipeline.lock"
+RETENTION_DAYS: 30
+DEFAULT_CAMERA_NAME: ""
+COPY_POSITIVE_CLIPS: false
+POSITIVE_CLIPS_DIR: "output/excerpts/positive_clips"
+POSITIVE_CLIP_MIN_CONFIDENCE: 0.7

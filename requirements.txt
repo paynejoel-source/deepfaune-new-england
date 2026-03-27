@@ -1,0 +1,8 @@
+# Install torch/torchvision/torchaudio from the CPU wheel index in setup_env.sh.
+PytorchWildlife
+lightning
+omegaconf
+timm
+ultralytics
+pyyaml
+pandas
