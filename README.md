@@ -14,6 +14,7 @@ Created and maintained by Joel Payne.
 ## Overview
 
 Technical design notes are in [docs/BUILD_STATUS.md](/home/joel/deepfaune_new_england/docs/BUILD_STATUS.md).
+Methods and validation notes are in [METHODS.md](/home/joel/deepfaune_new_england/METHODS.md).
 
 ## Main Files
 
