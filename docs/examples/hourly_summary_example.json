@@ -1,0 +1,72 @@
+{
+  "generated_at": "2026-03-27T14:30:00+00:00",
+  "status": "success",
+  "mode": "hourly",
+  "dry_run": false,
+  "camera_name": "back_yard",
+  "window_start_utc": "2026-03-25T14:00:00+00:00",
+  "window_end_utc": "2026-03-25T15:00:00+00:00",
+  "window_start_local": "2026-03-25T10:00:00-04:00",
+  "window_end_local": "2026-03-25T11:00:00-04:00",
+  "window_start_epoch_seconds": 1774552800.0,
+  "window_end_epoch_seconds": 1774556400.0,
+  "clip_count_selected": 1,
+  "clip_count_processed": 1,
+  "clip_count_with_detections": 1,
+  "clip_status_counts": {
+    "success": 1
+  },
+  "total_animal_detections": 2,
+  "species_counts": {
+    "white_tailed_deer": 2
+  },
+  "detector_class_counts": {
+    "animal": 2
+  },
+  "human_present": false,
+  "vehicle_present": false,
+  "copied_positive_clips": [
+    "output/demo/positive_clips/previews/back_yard/1774554110.0-1774554130.0.mp4"
+  ],
+  "clip_errors": [],
+  "top_frames": [
+    {
+      "clip_path": "/demo_mount/previews/back_yard/1774554110.0-1774554130.0.mp4",
+      "relative_clip_path": "previews/back_yard/1774554110.0-1774554130.0.mp4",
+      "frame_index": 1,
+      "frame_path": "frame_0001.jpg",
+      "timestamp_seconds": 1.0,
+      "timestamp_utc": "2026-03-25T14:35:11+00:00",
+      "timestamp_local": "2026-03-25T10:35:11-04:00",
+      "prediction": "white_tailed_deer",
+      "confidence": 0.93
+    },
+    {
+      "clip_path": "/demo_mount/previews/back_yard/1774554110.0-1774554130.0.mp4",
+      "relative_clip_path": "previews/back_yard/1774554110.0-1774554130.0.mp4",
+      "frame_index": 2,
+      "frame_path": "frame_0002.jpg",
+      "timestamp_seconds": 7.0,
+      "timestamp_utc": "2026-03-25T14:35:17+00:00",
+      "timestamp_local": "2026-03-25T10:35:17-04:00",
+      "prediction": "white_tailed_deer",
+      "confidence": 0.89
+    }
+  ],
+  "selected_clips": [
+    {
+      "clip_path": "/demo_mount/previews/back_yard/1774554110.0-1774554130.0.mp4",
+      "camera_name": "back_yard",
+      "clip_start_epoch_seconds": 1774554110.0
+    }
+  ],
+  "skipped_without_timestamp": [],
+  "processed_reports": [
+    {
+      "clip_path": "/demo_mount/previews/back_yard/1774554110.0-1774554130.0.mp4",
+      "relative_clip_path": "previews/back_yard/1774554110.0-1774554130.0.mp4",
+      "status": "success",
+      "report_path": "output/demo/clips/demo_clip_report.json"
+    }
+  ]
+}

@@ -3,12 +3,16 @@ from __future__ import annotations
 import os
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from datetime import datetime, timezone
+from io import StringIO
 from pathlib import Path
+from unittest import mock
 
 import run_pipeline
 from utils.config import load_pipeline_settings
 from utils.locking import file_lock
+from utils.reporting import read_json_report
 
 
 class PipelineTests(unittest.TestCase):
@@ -206,6 +210,86 @@ class PipelineTests(unittest.TestCase):
             )
 
             self.assertEqual(result, 0)
+
+    def test_process_hourly_window_dry_run_writes_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            output_dir = root / "output"
+            mount_root = root / "clips"
+            clip_start_epoch = 1774126221.93046
+            window_start = datetime.fromtimestamp(clip_start_epoch, tz=timezone.utc).replace(
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
+            window_end = window_start.replace(minute=0, second=0, microsecond=0)
+            window_end = window_end.replace(hour=window_start.hour) + run_pipeline.timedelta(hours=1)
+            clip_paths = [
+                mount_root / "previews" / "front_yard" / "1774126221.93046-1774126800.07907.mp4",
+                mount_root / "previews" / "front_yard" / "notimestamp.mp4",
+            ]
+
+            summary_path = run_pipeline.process_hourly_window(
+                window_start=window_start,
+                window_end=window_end,
+                clip_paths=clip_paths,
+                mount_root=mount_root,
+                output_dir=output_dir,
+                detector=None,
+                classifier=None,
+                frame_sample_seconds=1.0,
+                confidence_threshold=0.5,
+                detector_version="MDV6-yolov9-c",
+                classifier_model_path=root / "models" / "classifier.pth",
+                device="cpu",
+                camera_name="front_yard",
+                dry_run=True,
+                copy_positive_clips=False,
+                positive_clips_dir=None,
+                positive_clip_min_confidence=0.7,
+            )
+
+            summary = read_json_report(summary_path)
+            self.assertEqual(summary["status"], "dry_run")
+            self.assertEqual(summary["clip_count_selected"], 1)
+            self.assertEqual(summary["clip_count_processed"], 0)
+            self.assertEqual(len(summary["selected_clips"]), 1)
+            self.assertEqual(len(summary["skipped_without_timestamp"]), 1)
+
+    def test_run_demo_writes_example_reports(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir) / "output"
+
+            result = run_pipeline.run_demo(output_dir)
+
+            self.assertEqual(result, 0)
+            clip_report_path = output_dir / "demo" / "clips" / "demo_clip_report.json"
+            self.assertTrue(clip_report_path.is_file())
+            clip_report = read_json_report(clip_report_path)
+            self.assertEqual(clip_report["status"], "success")
+            self.assertEqual(clip_report["top_prediction"], "white_tailed_deer")
+
+            hourly_reports = list((output_dir / "demo" / "hourly").rglob("*.json"))
+            self.assertEqual(len(hourly_reports), 1)
+            hourly_report = read_json_report(hourly_reports[0])
+            self.assertEqual(hourly_report["clip_count_processed"], 1)
+            self.assertEqual(hourly_report["species_counts"], {"white_tailed_deer": 2})
+
+    def test_main_demo_mode_bypasses_runtime_config(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            current_dir = Path.cwd()
+            capture = StringIO()
+            try:
+                os.chdir(temp_dir)
+                with redirect_stdout(capture):
+                    with mock.patch("sys.argv", ["run_pipeline.py", "--demo"]):
+                        result = run_pipeline.main()
+            finally:
+                os.chdir(current_dir)
+
+            self.assertEqual(result, 0)
+            self.assertIn("Wrote demo clip report", capture.getvalue())
+            self.assertTrue((Path(temp_dir) / "output" / "demo" / "clips" / "demo_clip_report.json").is_file())
 
 
 if __name__ == "__main__":

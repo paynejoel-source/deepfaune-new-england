@@ -19,11 +19,6 @@ os.makedirs(PROJECT_CACHE_DIR / "matplotlib", exist_ok=True)
 os.environ.setdefault("TORCH_HOME", str(PROJECT_CACHE_DIR / "torch"))
 os.environ.setdefault("MPLCONFIGDIR", str(PROJECT_CACHE_DIR / "matplotlib"))
 
-import torch
-
-from core.classifier import ClassificationRecord, DeepFauneClassifierRunner
-from core.detector import MegaDetectorRunner
-from utils.config import load_pipeline_settings
 from utils.file_handling import (
     copy_clip_preserving_relative_path,
     list_mp4_files,
@@ -40,6 +35,11 @@ LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo or ZoneInfo("UTC")
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run the DeepFaune New England clip pipeline.")
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="Write publish-safe example reports without requiring models, clips, or a mounted source tree.",
+    )
     parser.add_argument(
         "--config",
         default="config/pipeline_settings.yaml",
@@ -96,6 +96,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def select_device() -> str:
+    import torch
+
     return "cuda" if torch.cuda.is_available() else "cpu"
 
 
@@ -208,6 +210,130 @@ def run_preflight_check(
     return 0
 
 
+def build_demo_clip_report() -> dict[str, Any]:
+    """Build a publish-safe example clip report for documentation and demos."""
+    clip_path = Path("/demo_mount/previews/back_yard/1774554110.0-1774554130.0.mp4")
+    clip_start_epoch_seconds, clip_end_epoch_seconds = parse_clip_epoch_range(clip_path)
+    frames = [
+        {
+            "frame_index": 1,
+            "frame_path": "frame_0001.jpg",
+            "timestamp_seconds": 1.0,
+            "timestamp_utc": isoformat_from_epoch(clip_start_epoch_seconds + 1.0, timezone.utc),
+            "timestamp_local": isoformat_from_epoch(clip_start_epoch_seconds + 1.0, LOCAL_TIMEZONE),
+            "detections": [
+                {
+                    "label": "animal",
+                    "class_id": 0,
+                    "confidence": 0.96,
+                    "bbox_xyxy": [104.0, 88.0, 812.0, 640.0],
+                    "bbox_normalized": [0.081, 0.122, 0.634, 0.889],
+                    "classification": {
+                        "prediction": "white_tailed_deer",
+                        "class_id": 7,
+                        "confidence": 0.93,
+                        "all_confidences": {
+                            "white_tailed_deer": 0.93,
+                            "bobcat": 0.04,
+                            "black_bear": 0.02,
+                            "other": 0.01,
+                        },
+                    },
+                }
+            ],
+        },
+        {
+            "frame_index": 2,
+            "frame_path": "frame_0002.jpg",
+            "timestamp_seconds": 7.0,
+            "timestamp_utc": isoformat_from_epoch(clip_start_epoch_seconds + 7.0, timezone.utc),
+            "timestamp_local": isoformat_from_epoch(clip_start_epoch_seconds + 7.0, LOCAL_TIMEZONE),
+            "detections": [
+                {
+                    "label": "animal",
+                    "class_id": 0,
+                    "confidence": 0.91,
+                    "bbox_xyxy": [132.0, 102.0, 844.0, 654.0],
+                    "bbox_normalized": [0.103, 0.142, 0.659, 0.908],
+                    "classification": {
+                        "prediction": "white_tailed_deer",
+                        "class_id": 7,
+                        "confidence": 0.89,
+                        "all_confidences": {
+                            "white_tailed_deer": 0.89,
+                            "bobcat": 0.06,
+                            "black_bear": 0.03,
+                            "other": 0.02,
+                        },
+                    },
+                }
+            ],
+        },
+    ]
+    summary = summarize_frames(frames)
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "status": "success",
+        "clip_path": str(clip_path),
+        "relative_clip_path": "previews/back_yard/1774554110.0-1774554130.0.mp4",
+        "camera_name": "back_yard",
+        "clip_start_epoch_seconds": clip_start_epoch_seconds,
+        "clip_end_epoch_seconds": clip_end_epoch_seconds,
+        "clip_start_time_utc": isoformat_from_epoch(clip_start_epoch_seconds, timezone.utc),
+        "clip_end_time_utc": isoformat_from_epoch(clip_end_epoch_seconds, timezone.utc),
+        "clip_start_time_local": isoformat_from_epoch(clip_start_epoch_seconds, LOCAL_TIMEZONE),
+        "clip_end_time_local": isoformat_from_epoch(clip_end_epoch_seconds, LOCAL_TIMEZONE),
+        "clip_duration_seconds": 20.017,
+        "clip_size_bytes": 7340032,
+        "frame_sample_seconds": 1.0,
+        "frame_count": len(frames),
+        "processing_time_seconds": 1.284,
+        "device": "cpu",
+        "models": {
+            "detector": {
+                "version": "MDV6-yolov9-c",
+                "weights_path": "models/MDV6-yolov9-c.pt",
+                "confidence_threshold": 0.5,
+            },
+            "classifier": {
+                "weights_path": "models/dfne_weights_v1_0.pth",
+            },
+        },
+        "positive_clip_copied": True,
+        "positive_clip_path": "output/demo/positive_clips/previews/back_yard/1774554110.0-1774554130.0.mp4",
+        "summary": summary,
+        "frames": frames,
+        **summary,
+    }
+
+
+def run_demo(output_dir: Path) -> int:
+    """Write demo clip and hourly reports without requiring any local runtime assets."""
+    demo_root = output_dir / "demo"
+    clip_report = build_demo_clip_report()
+    clip_destination = demo_root / "clips" / "demo_clip_report.json"
+    write_json_report(clip_report, clip_destination)
+    clip_report["report_path"] = str(clip_destination)
+
+    clip_start = float(clip_report["clip_start_epoch_seconds"])
+    window_start = floor_to_hour(datetime.fromtimestamp(clip_start, tz=timezone.utc).astimezone(LOCAL_TIMEZONE))
+    window_end = window_start + timedelta(hours=1)
+    hourly_summary = aggregate_clip_reports(
+        clip_reports=[clip_report],
+        window_start=window_start,
+        window_end=window_end,
+        camera_name=str(clip_report["camera_name"]),
+        dry_run=False,
+        selected_clips=[Path(str(clip_report["clip_path"]))],
+        skipped_without_timestamp=[],
+    )
+    hourly_destination = hourly_summary_path(demo_root, window_start, str(clip_report["camera_name"]))
+    write_json_report(hourly_summary, hourly_destination)
+    print(f"Wrote demo clip report: {clip_destination}")
+    print(f"Wrote demo hourly summary: {hourly_destination}")
+    return 0
+
+
 def save_state(state_path: Path, payload: dict[str, Any]) -> Path:
     """Persist scheduler state to disk."""
     return write_json_report(payload, state_path)
@@ -241,9 +367,9 @@ def run_retention(
 
 
 def attach_classifications(
-    detector: MegaDetectorRunner,
+    detector: Any,
     detection_results: list[dict[str, Any]],
-    classifications: list[ClassificationRecord],
+    classifications: list[Any],
     frame_timestamps: list[float],
     clip_start_epoch_seconds: float | None,
 ) -> list[dict[str, Any]]:
@@ -465,8 +591,8 @@ def aggregate_clip_reports(
 def process_clip(
     clip_path: Path,
     mount_root: Path,
-    detector: MegaDetectorRunner,
-    classifier: DeepFauneClassifierRunner,
+    detector: Any,
+    classifier: Any,
     frame_sample_seconds: float,
     confidence_threshold: float,
     detector_version: str,
@@ -689,8 +815,8 @@ def process_hourly_window(
     clip_paths: list[Path],
     mount_root: Path,
     output_dir: Path,
-    detector: MegaDetectorRunner | None,
-    classifier: DeepFauneClassifierRunner | None,
+    detector: Any | None,
+    classifier: Any | None,
     frame_sample_seconds: float,
     confidence_threshold: float,
     detector_version: str,
@@ -770,6 +896,11 @@ def process_hourly_window(
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
+
+    if args.demo:
+        return run_demo(Path("output"))
+
+    from utils.config import load_pipeline_settings
 
     config_path = Path(args.config)
     settings = load_pipeline_settings(config_path)
@@ -853,10 +984,13 @@ def main() -> int:
 
                 windows = iterate_hour_windows(start, latest_completed_hour)
 
-            detector: MegaDetectorRunner | None = None
-            classifier: DeepFauneClassifierRunner | None = None
+            detector: Any | None = None
+            classifier: Any | None = None
             device = select_device()
             if not args.dry_run:
+                from core.classifier import DeepFauneClassifierRunner
+                from core.detector import MegaDetectorRunner
+
                 detector = MegaDetectorRunner(
                     detector_model_path,
                     confidence_threshold,
@@ -917,6 +1051,9 @@ def main() -> int:
             raise SystemExit(f"No .mp4 clips found under {mount_root}")
 
         device = select_device()
+        from core.classifier import DeepFauneClassifierRunner
+        from core.detector import MegaDetectorRunner
+
         detector = MegaDetectorRunner(
             detector_model_path,
             confidence_threshold,

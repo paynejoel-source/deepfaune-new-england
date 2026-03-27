@@ -21,6 +21,7 @@ Technical design notes are in [docs/BUILD_STATUS.md](/home/joel/deepfaune_new_en
 - Example config: [config/pipeline_settings.example.yaml](/home/joel/deepfaune_new_england/config/pipeline_settings.example.yaml)
 - Environment bootstrap: [setup_env.sh](/home/joel/deepfaune_new_england/setup_env.sh)
 - Model setup: [docs/MODELS.md](/home/joel/deepfaune_new_england/docs/MODELS.md)
+- Example outputs: [docs/examples](/home/joel/deepfaune_new_england/docs/examples)
 
 ## Requirements
 
@@ -73,6 +74,12 @@ Run a preflight validation check:
 python run_pipeline.py --check
 ```
 
+Write demo reports without models or a mounted clip tree:
+
+```bash
+python run_pipeline.py --demo
+```
+
 Validate the pipeline on a local clip:
 
 ```bash
@@ -110,6 +117,11 @@ Run tests:
 ```bash
 ./.venv/bin/python -m unittest discover -s tests
 ```
+
+Review publish-safe example outputs:
+
+- [docs/examples/clip_report_example.json](/home/joel/deepfaune_new_england/docs/examples/clip_report_example.json)
+- [docs/examples/hourly_summary_example.json](/home/joel/deepfaune_new_england/docs/examples/hourly_summary_example.json)
 
 ## Notes
 
