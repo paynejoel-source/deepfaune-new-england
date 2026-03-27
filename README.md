@@ -1,6 +1,8 @@
 # DeepFaune New England
 
-Wildlife clip processing pipeline for mounted Beast/Frigate `.mp4` clips using:
+Independent open-source workflow for Frigate-style wildlife video processing using MegaDetector and DeepFaune New England classification. This repository provides local automation, hourly processing, and structured reporting on top of the broader DFNE and PyTorch-Wildlife ecosystem.
+
+Core workflow features:
 
 - MegaDetector via `PytorchWildlife`
 - DeepFaune New England classification
