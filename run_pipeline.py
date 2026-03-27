@@ -29,6 +29,7 @@ from utils.locking import file_lock
 from utils.mount_checks import mount_exists, mount_is_ready
 from utils.retention import prune_old_files
 from utils.reporting import read_json_report, write_json_report
+from utils.review import write_review_bundle
 from utils.video import extract_frames, get_sampled_frame_timestamps, get_video_metadata
 
 LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo or ZoneInfo("UTC")
@@ -374,6 +375,14 @@ def hourly_summary_path(output_dir: Path, window_start: datetime, camera_name: s
     hour_label = window_start.strftime("%H00")
     camera_label = sanitize_name(camera_name or "all")
     return output_dir / "hourly" / date_dir / f"{hour_label}_{camera_label}.json"
+
+
+def hourly_review_dir(output_dir: Path, window_start: datetime, camera_name: str | None) -> Path:
+    """Build the hourly review bundle directory path."""
+    date_dir = window_start.strftime("%Y-%m-%d")
+    hour_label = window_start.strftime("%H00")
+    camera_label = sanitize_name(camera_name or "all")
+    return output_dir / "review" / date_dir / f"{hour_label}_{camera_label}"
 
 
 def run_retention(
@@ -919,6 +928,7 @@ def process_hourly_window(
     )
     destination = hourly_summary_path(output_dir, window_start, camera_name)
     write_json_report(summary, destination)
+    write_review_bundle(summary, hourly_review_dir(output_dir, window_start, camera_name))
     return destination
 
 

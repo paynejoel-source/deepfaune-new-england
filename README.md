@@ -138,6 +138,11 @@ Review publish-safe example outputs:
 - [docs/examples/clip_report_example.json](/home/joel/deepfaune_new_england/docs/examples/clip_report_example.json)
 - [docs/examples/hourly_summary_example.json](/home/joel/deepfaune_new_england/docs/examples/hourly_summary_example.json)
 
+Hourly runs also write a lightweight review bundle under `output/review/...` with:
+
+- `review_summary.json`
+- `review_summary.html`
+
 ## Notes
 
 - The tracked config file is the example config, not a live machine config.

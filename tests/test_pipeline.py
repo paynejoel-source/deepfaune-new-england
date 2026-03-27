@@ -256,6 +256,9 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(summary["clip_count_processed"], 0)
             self.assertEqual(len(summary["selected_clips"]), 1)
             self.assertEqual(len(summary["skipped_without_timestamp"]), 1)
+            review_dir = output_dir / "review" / window_start.strftime("%Y-%m-%d") / "2000_front_yard"
+            self.assertTrue((review_dir / "review_summary.json").is_file())
+            self.assertTrue((review_dir / "review_summary.html").is_file())
 
     def test_run_demo_writes_example_reports(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
