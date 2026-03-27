@@ -77,6 +77,12 @@ Run a preflight validation check:
 python run_pipeline.py --check
 ```
 
+Export existing clip reports to a Camtrap DP package:
+
+```bash
+python run_pipeline.py --export-camtrap-dp
+```
+
 Write demo reports without models or a mounted clip tree:
 
 ```bash
@@ -130,6 +136,7 @@ Review publish-safe example outputs:
 
 - The tracked config file is the example config, not a live machine config.
 - Generated output, model weights, virtual environments, and local caches are intentionally excluded from version control.
+- Camtrap DP export is additive. It generates `deployments.csv`, `media.csv`, `observations.csv`, and `datapackage.json` from existing clip reports without changing the native JSON format.
 
 ## Disclaimer and Credits
 

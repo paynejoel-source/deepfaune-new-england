@@ -19,6 +19,7 @@ os.makedirs(PROJECT_CACHE_DIR / "matplotlib", exist_ok=True)
 os.environ.setdefault("TORCH_HOME", str(PROJECT_CACHE_DIR / "torch"))
 os.environ.setdefault("MPLCONFIGDIR", str(PROJECT_CACHE_DIR / "matplotlib"))
 
+from utils.camtrap_dp import export_camtrap_dp_package
 from utils.file_handling import (
     copy_clip_preserving_relative_path,
     list_mp4_files,
@@ -91,6 +92,21 @@ def build_parser() -> argparse.ArgumentParser:
         "--check",
         action="store_true",
         help="Validate config, model paths, mount path, and required system binaries without running inference.",
+    )
+    parser.add_argument(
+        "--export-camtrap-dp",
+        action="store_true",
+        help="Export existing clip reports as a Camtrap DP package without changing the native JSON reports.",
+    )
+    parser.add_argument(
+        "--reports-dir",
+        default=None,
+        help="Optional directory containing clip report JSON files to export.",
+    )
+    parser.add_argument(
+        "--export-dir",
+        default=None,
+        help="Optional destination directory for Camtrap DP export files.",
     )
     return parser
 
@@ -331,6 +347,19 @@ def run_demo(output_dir: Path) -> int:
     write_json_report(hourly_summary, hourly_destination)
     print(f"Wrote demo clip report: {clip_destination}")
     print(f"Wrote demo hourly summary: {hourly_destination}")
+    return 0
+
+
+def run_camtrap_dp_export(config_path: Path, reports_dir: Path | None, export_dir: Path | None) -> int:
+    """Export existing clip reports as a Camtrap DP package."""
+    from utils.config import read_settings_file
+
+    settings = read_settings_file(config_path)
+    output_dir = Path(str(settings.get("OUTPUT_DIR", "output")))
+    source_dir = reports_dir or (output_dir / "clips" if (output_dir / "clips").is_dir() else output_dir)
+    destination_dir = export_dir or (output_dir / "camtrap_dp")
+    export_camtrap_dp_package(source_dir, destination_dir, settings)
+    print(f"Wrote Camtrap DP package: {destination_dir}")
     return 0
 
 
@@ -899,6 +928,13 @@ def main() -> int:
 
     if args.demo:
         return run_demo(Path("output"))
+
+    if args.export_camtrap_dp:
+        return run_camtrap_dp_export(
+            config_path=Path(args.config),
+            reports_dir=Path(args.reports_dir) if args.reports_dir else None,
+            export_dir=Path(args.export_dir) if args.export_dir else None,
+        )
 
     from utils.config import load_pipeline_settings
 

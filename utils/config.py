@@ -14,6 +14,13 @@ REQUIRED_KEYS = {
 }
 
 
+def read_settings_file(config_path: str | Path) -> dict:
+    """Read a YAML settings file without validating runtime paths."""
+    config_path = Path(config_path)
+    with config_path.open("r", encoding="utf-8") as handle:
+        return yaml.safe_load(handle) or {}
+
+
 def validate_pipeline_settings(settings: dict, config_path: str | Path) -> dict:
     """Validate config values and return normalized path fields."""
     config_path = Path(config_path)
@@ -70,8 +77,7 @@ def validate_pipeline_settings(settings: dict, config_path: str | Path) -> dict:
 def load_pipeline_settings(config_path: str | Path) -> dict:
     """Load YAML configuration and verify the required keys are present."""
     config_path = Path(config_path)
-    with config_path.open("r", encoding="utf-8") as handle:
-        settings = yaml.safe_load(handle) or {}
+    settings = read_settings_file(config_path)
 
     missing = sorted(REQUIRED_KEYS - settings.keys())
     if missing:

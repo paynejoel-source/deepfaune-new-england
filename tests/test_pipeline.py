@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 import unittest
@@ -290,6 +291,40 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(result, 0)
             self.assertIn("Wrote demo clip report", capture.getvalue())
             self.assertTrue((Path(temp_dir) / "output" / "demo" / "clips" / "demo_clip_report.json").is_file())
+
+    def test_run_camtrap_dp_export_writes_package(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            config_path = root / "config.yaml"
+            reports_dir = root / "reports"
+            export_dir = root / "camtrap_dp"
+            reports_dir.mkdir(parents=True, exist_ok=True)
+            config_path.write_text(
+                "\n".join(
+                    [
+                        'OUTPUT_DIR: "output"',
+                        'CAMTRAP_PROJECT_TITLE: "DeepFaune Export"',
+                        "CAMTRAP_LATITUDE: 34.1",
+                        "CAMTRAP_LONGITUDE: -84.1",
+                        'CAMTRAP_LOCATION_NAME: "Ball Ground"',
+                        "CAMTRAP_TAXON_MAP:",
+                        '  white_tailed_deer: "Odocoileus virginianus"',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            report = run_pipeline.build_demo_clip_report()
+            (reports_dir / "demo_clip.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+            result = run_pipeline.run_camtrap_dp_export(config_path, reports_dir, export_dir)
+
+            self.assertEqual(result, 0)
+            self.assertTrue((export_dir / "deployments.csv").is_file())
+            self.assertTrue((export_dir / "media.csv").is_file())
+            self.assertTrue((export_dir / "observations.csv").is_file())
+            datapackage = read_json_report(export_dir / "datapackage.json")
+            self.assertEqual(datapackage["project"]["title"], "DeepFaune Export")
+            self.assertEqual(datapackage["taxonomic"], [{"scientificName": "Odocoileus virginianus"}])
 
 
 if __name__ == "__main__":

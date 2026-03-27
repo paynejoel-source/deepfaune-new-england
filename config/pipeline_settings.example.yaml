@@ -12,3 +12,31 @@ DEFAULT_CAMERA_NAME: ""
 COPY_POSITIVE_CLIPS: true
 POSITIVE_CLIPS_DIR: "output/positive_clips"
 POSITIVE_CLIP_MIN_CONFIDENCE: 0.7
+
+# Optional Camtrap DP export metadata.
+CAMTRAP_PROJECT_TITLE: "DeepFaune New England Export"
+CAMTRAP_PROJECT_DESCRIPTION: "Independent wildlife video-processing export generated from DeepFaune New England clip reports."
+CAMTRAP_CONTACT_NAME: "Joel Payne"
+CAMTRAP_CONTACT_EMAIL: "payne.joel@gmail.com"
+CAMTRAP_DEPLOYMENT_PREFIX: "dep"
+CAMTRAP_LOCATION_NAME: "Back Yard"
+CAMTRAP_LATITUDE: 0.0
+CAMTRAP_LONGITUDE: 0.0
+CAMTRAP_CAMERA_MODEL: ""
+CAMTRAP_CAMERA_LOCATIONS:
+  back_yard:
+    latitude: 0.0
+    longitude: 0.0
+    locationName: "Back Yard"
+    locationID: "back-yard"
+    cameraID: "back-yard"
+    cameraModel: ""
+  front_yard:
+    latitude: 0.0
+    longitude: 0.0
+    locationName: "Front Yard"
+    locationID: "front-yard"
+    cameraID: "front-yard"
+    cameraModel: ""
+CAMTRAP_TAXON_MAP:
+  white_tailed_deer: "Odocoileus virginianus"
