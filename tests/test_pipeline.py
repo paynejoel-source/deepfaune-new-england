@@ -29,6 +29,13 @@ class PipelineTests(unittest.TestCase):
         self.assertIsNone(start)
         self.assertIsNone(end)
 
+    def test_parse_clip_epoch_range_recording_path(self) -> None:
+        start, end = run_pipeline.parse_clip_epoch_range(
+            Path("/mnt/beast_storage/nvr/frigate/recordings/2026-03-28/12/front_yard/26.12.mp4")
+        )
+        self.assertEqual(start, 1774700772.0)
+        self.assertIsNone(end)
+
     def test_select_clips_for_window_filters_by_camera_and_time(self) -> None:
         clips = [
             Path("/mnt/clips/previews/front_yard/1774126221.93046-1774126800.07907.mp4"),

@@ -132,9 +132,30 @@ def select_device() -> str:
 def parse_clip_epoch_range(clip_path: Path) -> tuple[float | None, float | None]:
     """Parse Frigate-style clip filenames of the form <start>-<end>.mp4."""
     match = re.match(r"(?P<start>\d+(?:\.\d+)?)-(?P<end>\d+(?:\.\d+)?)\.mp4$", clip_path.name)
-    if match is None:
+    if match is not None:
+        return float(match.group("start")), float(match.group("end"))
+
+    recording_match = re.match(r"(?P<minute>\d{2})\.(?P<second>\d{2})\.mp4$", clip_path.name)
+    if recording_match is None:
         return None, None
-    return float(match.group("start")), float(match.group("end"))
+
+    parts = clip_path.parts
+    try:
+        recordings_index = parts.index("recordings")
+        date_text = parts[recordings_index + 1]
+        hour_text = parts[recordings_index + 2]
+    except (ValueError, IndexError):
+        return None, None
+
+    try:
+        start_time = datetime.strptime(
+            f"{date_text} {hour_text}:{recording_match.group('minute')}:{recording_match.group('second')}",
+            "%Y-%m-%d %H:%M:%S",
+        ).replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None, None
+
+    return start_time.timestamp(), None
 
 
 def isoformat_from_epoch(epoch_seconds: float, tzinfo: Any) -> str:
@@ -546,6 +567,8 @@ def process_clip(
     except ValueError:
         relative_clip_path = clip_path.name
     clip_start_epoch_seconds, clip_end_epoch_seconds = parse_clip_epoch_range(clip_path)
+    if clip_start_epoch_seconds is not None and clip_end_epoch_seconds is None:
+        clip_end_epoch_seconds = clip_start_epoch_seconds + float(video_metadata["duration_seconds"])
 
     with tempfile.TemporaryDirectory(prefix="dfne_frames_") as temp_dir:
         frame_dir = Path(temp_dir)
