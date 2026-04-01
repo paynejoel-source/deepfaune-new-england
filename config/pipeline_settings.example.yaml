@@ -1,4 +1,4 @@
-BEAST_MOUNT_PATH: "/path/to/frigate/clips"
+BEAST_MOUNT_PATH: "/path/to/camera_clips"
 DETECTOR_MODEL_PATH: "models/MDV6-yolov9-c.pt"
 DETECTOR_VERSION: "MDV6-yolov9-c"
 CLASSIFIER_MODEL_PATH: "models/dfne_weights_v1_0.pth"
@@ -16,28 +16,28 @@ POSITIVE_CLIP_MIN_CONFIDENCE: 0.7
 # Optional Camtrap DP export metadata.
 CAMTRAP_PROJECT_TITLE: "DeepFaune New England Export"
 CAMTRAP_PROJECT_DESCRIPTION: "Independent wildlife video-processing export generated from DeepFaune New England clip reports."
-CAMTRAP_CONTACT_NAME: "Joel Payne"
-CAMTRAP_CONTACT_EMAIL: "payne.joel@gmail.com"
+CAMTRAP_CONTACT_NAME: "Repository Maintainer"
+CAMTRAP_CONTACT_EMAIL: "maintainer@example.com"
 CAMTRAP_DEPLOYMENT_PREFIX: "dep"
-CAMTRAP_LOCATION_NAME: "Back Yard"
+CAMTRAP_LOCATION_NAME: "Camera Location"
 CAMTRAP_LATITUDE: 0.0
 CAMTRAP_LONGITUDE: 0.0
 CAMTRAP_CAMERA_MODEL: ""
 CAMTRAP_OBSERVATION_MODE: "detection"
 CAMTRAP_CAMERA_LOCATIONS:
-  back_yard:
+  camera_a:
     latitude: 0.0
     longitude: 0.0
-    locationName: "Back Yard"
-    locationID: "back-yard"
-    cameraID: "back-yard"
+    locationName: "Camera A"
+    locationID: "camera-a"
+    cameraID: "camera-a"
     cameraModel: ""
-  front_yard:
+  camera_b:
     latitude: 0.0
     longitude: 0.0
-    locationName: "Front Yard"
-    locationID: "front-yard"
-    cameraID: "front-yard"
+    locationName: "Camera B"
+    locationID: "camera-b"
+    cameraID: "camera-b"
     cameraModel: ""
 CAMTRAP_TAXON_MAP:
   white_tailed_deer: "Odocoileus virginianus"

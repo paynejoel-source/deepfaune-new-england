@@ -14,8 +14,8 @@ DeepFaune New England is a wildlife clip-processing pipeline for Frigate-style `
 
 ## Current Capabilities
 
-- Python environment bootstrap via [`setup_env.sh`](/home/joel/deepfaune_new_england/setup_env.sh)
-- Single-clip processing via [`run_pipeline.py`](/home/joel/deepfaune_new_england/run_pipeline.py)
+- Python environment bootstrap via [`setup_env.sh`](setup_env.sh)
+- Single-clip processing via [`run_pipeline.py`](run_pipeline.py)
 - Hourly orchestration mode with camera filtering and dry-run support
 - Absolute UTC and local timestamps derived from Frigate-style clip filenames
 - Per-clip and hourly JSON reports
@@ -23,7 +23,15 @@ DeepFaune New England is a wildlife clip-processing pipeline for Frigate-style `
 - Positive-clip copying based on classification confidence
 - Whole-run file lock to prevent overlapping executions
 - Retention cleanup for generated outputs
+- Preflight validation mode for config, paths, models, and required binaries
+- Demo mode for publish-safe example outputs without local models or a mounted clip tree
+- Camtrap DP export from existing clip reports
+- Hourly review bundle output:
+  - `review_summary.json`
+  - `review_summary.html`
+- Labeled validation mode for existing clip reports
 - `systemd` service and timer templates for scheduled execution
+- GitHub Actions CI for the public repository
 
 ## Architecture
 
@@ -41,12 +49,12 @@ DeepFaune New England is a wildlife clip-processing pipeline for Frigate-style `
 
 - MegaDetector v6
 - Current variant: `MDV6-yolov9-c`
-- Implementation: [`core/detector.py`](/home/joel/deepfaune_new_england/core/detector.py)
+- Implementation: [`core/detector.py`](core/detector.py)
 
 ### Classification
 
 - DeepFaune New England
-- Implementation: [`core/classifier.py`](/home/joel/deepfaune_new_england/core/classifier.py)
+- Implementation: [`core/classifier.py`](core/classifier.py)
 - A local wrapper is used so the classifier loads downloaded model weights directly from the local `models/` directory
 
 ### Timestamp Handling
@@ -64,7 +72,7 @@ This allows each frame to be reported with:
 
 ## Hourly Mode
 
-Hourly mode is implemented in [`run_pipeline.py`](/home/joel/deepfaune_new_england/run_pipeline.py).
+Hourly mode is implemented in [`run_pipeline.py`](run_pipeline.py).
 
 Supported examples:
 
@@ -108,6 +116,21 @@ Each hourly summary includes:
 - selected clips and processed reports
 - copied positive clips and top frames
 
+### Review Bundle
+
+Hourly processing also writes a lightweight human-review bundle under `output/review/...` containing:
+
+- `review_summary.json`
+- `review_summary.html`
+
+### Validation Output
+
+Validation mode writes:
+
+- `output/validation/validation_report.json`
+
+This output is intended for small labeled checks against known clips. It is a workflow-validation and site-validation aid, not proof of broad field accuracy by itself.
+
 ## Positive Clip Copying
 
 Positive clip copying is controlled by:
@@ -124,8 +147,50 @@ Only clips with animal detections and a sufficiently strong top classification a
 - A concurrent run exits immediately with a clear error
 - Generated outputs can be pruned automatically with `RETENTION_DAYS`
 
+## Current Verified Status
+
+The current state has been verified conservatively:
+
+- local unit tests are passing
+- CI is published and passing on GitHub
+- the report, export, review, and validation paths all execute successfully
+
+One real local proof-of-work example was also checked:
+
+- expected label: `Domestic Dog`
+- predicted label: `Domestic Dog`
+- top prediction confidence: `0.9946834444999695`
+
+This confirms that the current validation path works on a real local case.
+
+## What This Does Not Yet Prove
+
+The current examples do **not** establish:
+
+- broad species-level accuracy
+- broad field precision or recall
+- robust day/night performance
+- complete capture opportunity across all local animal events
+
+One important practical limit remains explicit:
+
+- Frigate clip generation can miss animal events, so current examples do not represent full system recall
+
+## Next Level Requirements
+
+To move beyond proof-of-work and into a more defensible validation state, the project needs:
+
+1. A real labeled validation set
+2. Multiple taxa, not just one local dog example
+3. Some known failure cases and no-detection cases
+4. Day and night examples if possible
+5. Clear separation between upstream clip-miss behavior and model misclassification behavior
+
+The next level is evidence, not just more features.
+
 ## Known Limits
 
 - The published repository does not include model weights
 - Local mount paths must be configured by each user
 - Thresholds and frame sampling may still require tuning for specific camera placements or wildlife behavior
+- Current real-world validation evidence is still minimal and should be described as such

@@ -437,8 +437,8 @@ def build_datapackage(
     temporal_end = max(str(row["deploymentEnd"])[:10] for row in deployment_rows)
     scientific_names = sorted({str(row["scientificName"]) for row in observation_rows if row.get("scientificName")})
 
-    contact_name = str(settings.get("CAMTRAP_CONTACT_NAME", "Joel Payne"))
-    contact_email = str(settings.get("CAMTRAP_CONTACT_EMAIL", "payne.joel@gmail.com"))
+    contact_name = str(settings.get("CAMTRAP_CONTACT_NAME", "Repository Maintainer"))
+    contact_email = str(settings.get("CAMTRAP_CONTACT_EMAIL", "maintainer@example.com"))
     project_title = str(settings.get("CAMTRAP_PROJECT_TITLE", "DeepFaune New England Export"))
     project_description = str(
         settings.get(

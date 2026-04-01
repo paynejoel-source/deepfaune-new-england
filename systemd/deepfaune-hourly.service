@@ -5,8 +5,8 @@ Wants=network-online.target remote-fs.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=/home/joel/deepfaune_new_england
-ExecStart=/home/joel/deepfaune_new_england/.venv/bin/python /home/joel/deepfaune_new_england/run_pipeline.py --hourly
+WorkingDirectory=%h/deepfaune_new_england
+ExecStart=%h/deepfaune_new_england/.venv/bin/python %h/deepfaune_new_england/run_pipeline.py --hourly
 
 [Install]
 WantedBy=multi-user.target

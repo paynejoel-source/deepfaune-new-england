@@ -56,10 +56,10 @@ For scientific or management use, downstream review should ideally include:
 
 The repository now includes:
 
-- pinned Python dependency versions in [requirements.txt](/home/joel/deepfaune_new_england/requirements.txt)
-- a preflight command in [run_pipeline.py](/home/joel/deepfaune_new_england/run_pipeline.py)
-- a demo mode in [run_pipeline.py](/home/joel/deepfaune_new_england/run_pipeline.py)
-- publish-safe example outputs in [docs/examples](/home/joel/deepfaune_new_england/docs/examples)
+- pinned Python dependency versions in [requirements.txt](requirements.txt)
+- a preflight command in [run_pipeline.py](run_pipeline.py)
+- a demo mode in [run_pipeline.py](run_pipeline.py)
+- publish-safe example outputs in [docs/examples](docs/examples)
 
 Model weights are not bundled with the repository and must be obtained separately.
 
