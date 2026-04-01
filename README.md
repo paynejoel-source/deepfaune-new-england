@@ -7,6 +7,8 @@ Credit split:
 
 Independent open-source workflow for Frigate-style wildlife video processing using MegaDetector and DeepFaune New England classification. This repository provides local automation, hourly processing, and structured reporting on top of the broader DFNE and PyTorch-Wildlife ecosystem.
 
+This repository is publishable both as a public GitHub project and as a Python package/release artifact.
+
 Core workflow features:
 
 - MegaDetector via `PytorchWildlife`
@@ -51,6 +53,18 @@ Then edit `config/pipeline_settings.yaml` for your local mount paths, output pat
 The repository does not ship model weights. You will need to place the required detector and classifier weights into `models/` yourself.
 
 ## Quickstart
+
+Package-style install from the repo root:
+
+```bash
+python -m pip install .
+```
+
+Then run the CLI with:
+
+```bash
+deepfaune-new-england --check
+```
 
 Install system prerequisites:
 
@@ -176,6 +190,14 @@ The engineering in this repository focuses on operational use cases such as:
 - local preflight validation and workflow support
 
 Model weights, upstream model design, and the original DeepFaune New England scientific work belong to their respective upstream authors and organizations.
+
+## Publishing
+
+This repository includes Python package metadata in `pyproject.toml` and a GitHub Actions workflow for PyPI trusted publishing:
+
+- `.github/workflows/publish-pypi.yml`
+
+That makes the repository release-ready without requiring credentials to be stored in git.
 
 Retention is controlled in [config/pipeline_settings.yaml](config/pipeline_settings.yaml) with:
 
