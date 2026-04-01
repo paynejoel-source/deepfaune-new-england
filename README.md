@@ -11,20 +11,20 @@ Core workflow features:
 - clip-level error isolation so hourly runs continue past bad files
 - automatic retention cleanup for generated outputs
 
-Created and maintained by Joel Payne.
+Maintained in this repository by `paynejoel-source`.
 
 ## Overview
 
-Technical design notes are in [docs/BUILD_STATUS.md](/home/joel/deepfaune_new_england/docs/BUILD_STATUS.md).
-Methods and validation notes are in [METHODS.md](/home/joel/deepfaune_new_england/METHODS.md).
+Technical design notes are in [docs/BUILD_STATUS.md](docs/BUILD_STATUS.md).
+Methods and validation notes are in [METHODS.md](METHODS.md).
 
 ## Main Files
 
-- Runtime entrypoint: [run_pipeline.py](/home/joel/deepfaune_new_england/run_pipeline.py)
-- Example config: [config/pipeline_settings.example.yaml](/home/joel/deepfaune_new_england/config/pipeline_settings.example.yaml)
-- Environment bootstrap: [setup_env.sh](/home/joel/deepfaune_new_england/setup_env.sh)
-- Model setup: [docs/MODELS.md](/home/joel/deepfaune_new_england/docs/MODELS.md)
-- Example outputs: [docs/examples](/home/joel/deepfaune_new_england/docs/examples)
+- Runtime entrypoint: [run_pipeline.py](run_pipeline.py)
+- Example config: [config/pipeline_settings.example.yaml](config/pipeline_settings.example.yaml)
+- Environment bootstrap: [setup_env.sh](setup_env.sh)
+- Model setup: [docs/MODELS.md](docs/MODELS.md)
+- Example outputs: [docs/examples](docs/examples)
 
 ## Requirements
 
@@ -69,7 +69,7 @@ Create your local config:
 cp config/pipeline_settings.example.yaml config/pipeline_settings.yaml
 ```
 
-Add the required model files under `models/` as described in [docs/MODELS.md](/home/joel/deepfaune_new_england/docs/MODELS.md).
+Add the required model files under `models/` as described in [docs/MODELS.md](docs/MODELS.md).
 
 Run a preflight validation check:
 
@@ -141,10 +141,10 @@ Run tests:
 
 Review publish-safe example outputs:
 
-- [docs/examples/clip_report_example.json](/home/joel/deepfaune_new_england/docs/examples/clip_report_example.json)
-- [docs/examples/hourly_summary_example.json](/home/joel/deepfaune_new_england/docs/examples/hourly_summary_example.json)
-- [docs/examples/validation_single_dog_case.csv](/home/joel/deepfaune_new_england/docs/examples/validation_single_dog_case.csv)
-- [docs/examples/validation_single_dog_report.json](/home/joel/deepfaune_new_england/docs/examples/validation_single_dog_report.json)
+- [docs/examples/clip_report_example.json](docs/examples/clip_report_example.json)
+- [docs/examples/hourly_summary_example.json](docs/examples/hourly_summary_example.json)
+- [docs/examples/validation_single_dog_case.csv](docs/examples/validation_single_dog_case.csv)
+- [docs/examples/validation_single_dog_report.json](docs/examples/validation_single_dog_report.json)
 
 Hourly runs also write a lightweight review bundle under `output/review/...` with:
 
@@ -174,7 +174,7 @@ The engineering in this repository focuses on operational use cases such as:
 
 Model weights, upstream model design, and the original DeepFaune New England scientific work belong to their respective upstream authors and organizations.
 
-Retention is controlled in [config/pipeline_settings.yaml](/home/joel/deepfaune_new_england/config/pipeline_settings.yaml) with:
+Retention is controlled in [config/pipeline_settings.yaml](config/pipeline_settings.yaml) with:
 
 ```yaml
 RETENTION_DAYS: 30
