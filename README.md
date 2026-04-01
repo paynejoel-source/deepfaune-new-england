@@ -1,5 +1,10 @@
 # DeepFaune New England
 
+Credit split:
+
+- upstream model and scientific work: the respective DeepFaune New England, MegaDetector, and PyTorch-Wildlife authors and organizations
+- workflow design, packaging, and repository maintenance in this repo: `paynejoel-source`
+
 Independent open-source workflow for Frigate-style wildlife video processing using MegaDetector and DeepFaune New England classification. This repository provides local automation, hourly processing, and structured reporting on top of the broader DFNE and PyTorch-Wildlife ecosystem.
 
 Core workflow features:
@@ -10,8 +15,6 @@ Core workflow features:
 - automatic copying of animal-positive clips into a designated folder
 - clip-level error isolation so hourly runs continue past bad files
 - automatic retention cleanup for generated outputs
-
-Maintained in this repository by `paynejoel-source`.
 
 ## Overview
 
