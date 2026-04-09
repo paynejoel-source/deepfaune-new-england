@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 import tempfile
+from bisect import bisect_left
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from time import perf_counter
@@ -222,6 +223,42 @@ def select_clips_for_window(
             selected.append(clip_path)
 
     return selected, skipped_without_timestamp
+
+
+def build_clip_window_index(
+    clip_paths: list[Path],
+    camera_name: str | None,
+) -> tuple[list[float], list[tuple[float, Path]], list[Path]]:
+    """Build a sorted timestamp index to accelerate hourly window clip selection."""
+    indexed: list[tuple[float, Path]] = []
+    skipped_without_timestamp: list[Path] = []
+
+    for clip_path in clip_paths:
+        if camera_name and get_clip_camera_name(clip_path) != camera_name:
+            continue
+
+        clip_start_epoch, _ = parse_clip_epoch_range(clip_path)
+        if clip_start_epoch is None:
+            skipped_without_timestamp.append(clip_path)
+            continue
+        indexed.append((clip_start_epoch, clip_path))
+
+    indexed.sort(key=lambda item: item[0])
+    return ([item[0] for item in indexed], indexed, skipped_without_timestamp)
+
+
+def select_indexed_clips_for_window(
+    clip_start_epochs: list[float],
+    indexed_clips: list[tuple[float, Path]],
+    window_start: datetime,
+    window_end: datetime,
+) -> list[tuple[float, Path]]:
+    """Select clips for a window using pre-sorted epoch timestamps and binary search."""
+    window_start_epoch = window_start.astimezone(timezone.utc).timestamp()
+    window_end_epoch = window_end.astimezone(timezone.utc).timestamp()
+    left = bisect_left(clip_start_epochs, window_start_epoch)
+    right = bisect_left(clip_start_epochs, window_end_epoch)
+    return indexed_clips[left:right]
 
 
 def state_file_path(state_dir: Path, camera_name: str | None) -> Path:
@@ -457,8 +494,8 @@ def aggregate_clip_reports(
     window_end: datetime,
     camera_name: str | None,
     dry_run: bool,
-    selected_clips: list[Path],
-    skipped_without_timestamp: list[Path],
+    selected_clips: list[tuple[float, Path]],
+    skipped_without_timestamp: list[str],
 ) -> dict[str, Any]:
     """Aggregate per-clip results into one hourly summary report."""
     species_counts: Counter[str] = Counter()
@@ -532,11 +569,11 @@ def aggregate_clip_reports(
             {
                 "clip_path": str(path),
                 "camera_name": get_clip_camera_name(path),
-                "clip_start_epoch_seconds": parse_clip_epoch_range(path)[0],
+                "clip_start_epoch_seconds": clip_start_epoch,
             }
-            for path in selected_clips
+            for clip_start_epoch, path in selected_clips
         ],
-        "skipped_without_timestamp": [str(path) for path in skipped_without_timestamp],
+        "skipped_without_timestamp": skipped_without_timestamp,
         "processed_reports": [
             {
                 "clip_path": report["clip_path"],
@@ -775,7 +812,10 @@ def maybe_copy_positive_clip(
 def process_hourly_window(
     window_start: datetime,
     window_end: datetime,
-    clip_paths: list[Path],
+    *,
+    clip_paths: list[Path] | None = None,
+    selected_clips: list[tuple[float, Path]] | None = None,
+    skipped_without_timestamp: list[Path] | list[str] | None = None,
     mount_root: Path,
     output_dir: Path,
     detector: Any | None,
@@ -792,19 +832,33 @@ def process_hourly_window(
     positive_clip_min_confidence: float,
 ) -> Path:
     """Process or preview one hourly window and write the hourly summary JSON."""
-    selected_clips, skipped_without_timestamp = select_clips_for_window(
-        clip_paths,
-        window_start,
-        window_end,
-        camera_name,
-    )
+    if selected_clips is None:
+        if clip_paths is None:
+            raise ValueError("Either clip_paths or selected_clips must be provided.")
+        selected_paths, inferred_skipped = select_clips_for_window(
+            clip_paths,
+            window_start,
+            window_end,
+            camera_name,
+        )
+        selected_clips = []
+        for path in selected_paths:
+            clip_start_epoch, _ = parse_clip_epoch_range(path)
+            if clip_start_epoch is not None:
+                selected_clips.append((clip_start_epoch, path))
+        skipped_without_timestamp = inferred_skipped
+    elif skipped_without_timestamp is None:
+        skipped_without_timestamp = []
+
+    if skipped_without_timestamp and isinstance(skipped_without_timestamp[0], Path):
+        skipped_without_timestamp = [str(path) for path in skipped_without_timestamp]
 
     clip_reports: list[dict[str, Any]] = []
     if not dry_run and selected_clips:
         if detector is None or classifier is None:
             raise RuntimeError("Detector and classifier must be initialized for non-dry-run hourly mode.")
 
-        for clip_path in selected_clips:
+        for _, clip_path in selected_clips:
             try:
                 report = process_clip(
                     clip_path=clip_path,
@@ -933,10 +987,11 @@ def main() -> int:
                 raise SystemExit("--window-start and --window-end must be provided together")
 
             all_clip_paths = list_mp4_files(mount_root)
-            if camera_name:
-                all_clip_paths = [
-                    path for path in all_clip_paths if get_clip_camera_name(path) == camera_name
-                ]
+            clip_start_epochs, indexed_clips, skipped_without_timestamp = build_clip_window_index(
+                all_clip_paths,
+                camera_name,
+            )
+            skipped_without_timestamp_str = [str(path) for path in skipped_without_timestamp]
 
             now_local = datetime.now(LOCAL_TIMEZONE)
             latest_completed_hour = floor_to_hour(now_local)
@@ -981,10 +1036,17 @@ def main() -> int:
 
             last_summary_path: Path | None = None
             for window_start, window_end in windows:
+                selected_clips = select_indexed_clips_for_window(
+                    clip_start_epochs,
+                    indexed_clips,
+                    window_start,
+                    window_end,
+                )
                 last_summary_path = process_hourly_window(
                     window_start=window_start,
                     window_end=window_end,
-                    clip_paths=all_clip_paths,
+                    selected_clips=selected_clips,
+                    skipped_without_timestamp=skipped_without_timestamp_str,
                     mount_root=mount_root,
                     output_dir=output_dir,
                     detector=detector,
